@@ -1,0 +1,29 @@
+service: lambda-despacho-callback
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'dev'}
+  region: ${file(./config/config.${self:provider.stage}.json):REGION}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:Query"
+        - "dynamodb:GetItem"
+        - "dynamodb:UpdateItem"
+      Resource:
+        - arn:aws:dynamodb:us-east-2:826299878174:table/pf_ordenes_despacho
+  environment:
+    DESPACHO_TABLE: "pf_ordenes_despacho"
+    SLS_DEBUG: "*"
+
+functions:
+  completar:
+    handler: app.complete
+    events:
+      - http:
+          path: orden-despacho/{id}
+          method: post
+          cors: true
+  plugins:
+    - serverless-offline
